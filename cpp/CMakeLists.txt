@@ -4,6 +4,17 @@ project(MazeSolver)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
+# Set default build type to Release if not specified
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release)
+endif()
+
+# Add debug symbols in Debug mode
+set(CMAKE_CXX_FLAGS_DEBUG "-g")
+
+# Add optimizations in Release mode
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -s")
+
 # Enable testing
 enable_testing()
 

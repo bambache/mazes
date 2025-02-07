@@ -4,15 +4,31 @@
 using namespace std;
 
 int main() {
-  vector<vector<char>> maze = {{'#', '#', '#', '#', '#'},
-                               {'#', '_', '_', '#', '#'},
-                               {'#', '_', '#', '_', '#'},
-                               {'#', '_', '_', '_', '#'},
-                               {'#', '#', '#', '#', '#'}};
+  vector<vector<char>> input = {{'#', 'S', '#', '#', '#'},
+                                {'#', '_', '_', '#', '#'},
+                                {'#', '_', '#', '_', '#'},
+                                {'#', '_', '_', '_', '#'},
+                                {'#', '#', '#', 'E', '#'}};
 
-  printMaze(maze);
+  Utils::printInput(input);
 
-  AdjList graph = convertToAdjList(maze);
-  printAdjList(graph);
+  auto maze = Maze{};
+
+  maze.initialize(input);
+  maze.print();
+
+  auto path = maze.BFS();
+
+  if (!path.empty()) {
+    for (const auto &p : path) {
+      cout << "(" << p.getRow() << "," << p.getCol() << ") ";
+    }
+    cout << endl;
+  } else {
+    cout << "No path found!" << endl;
+  }
+
+  cout << sizeof(Maze) << endl;
+
   return 0;
 }
