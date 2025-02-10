@@ -20,8 +20,9 @@ int main() {
   auto path = maze.BFS();
 
   if (!path.empty()) {
+    cout << "Shortest path: ";
     for (const auto &p : path) {
-      cout << "(" << p.getRow() << "," << p.getCol() << ") ";
+      p.print();
     }
     cout << endl;
   } else {
