@@ -10,7 +10,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 # Add debug symbols in Debug mode
-set(CMAKE_C_FLAGS_DEBUG "-g")
+set(CMAKE_C_FLAGS_DEBUG "-fsanitize=leak -g")
 
 # Add optimizations in Release mode
 set(CMAKE_C_FLAGS_RELEASE "-O3 -s")
