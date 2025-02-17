@@ -32,3 +32,5 @@
 *.app
 
 [Bb]uild/
+.*cache/
+zig-out/
