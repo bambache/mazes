@@ -20,6 +20,10 @@ fn printInput(input: []const []const u8) !void {
 }
 
 pub fn main() !void {
+    var general_purpose_allocator = std.heap.GeneralPurposeAllocator(.{}){};
+    defer std.debug.assert(general_purpose_allocator.deinit() == .ok);
+    const gpa = general_purpose_allocator.allocator();
+
     const input: []const []const u8 = &[_][]const u8{
         "#S###",
         "#__##",
@@ -29,8 +33,10 @@ pub fn main() !void {
     };
     try printInput(input);
 
-    const m = try maze.Maze.init(input);
-    _ = m;
+    var m = try maze.Maze.init(gpa, input);
+    defer m.deinit();
+
+    try m.print();
 }
 
 test "simple test" {

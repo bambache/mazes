@@ -4,8 +4,13 @@ const Path = std.ArrayList(Position);
 const Graph = std.AutoHashMap(Position, Path);
 
 pub const Position = struct {
-    row: i32 = -1,
-    col: i32 = -1,
+    row: i32,
+    col: i32,
+
+    const default: Position = .{
+        .row = -1,
+        .col = -1,
+    };
 
     pub fn valid(self: Position) bool {
         return self.row != -1 and self.col != -1;
@@ -49,13 +54,12 @@ pub fn addNodeToGraph(graph: *Graph, position: Position, input: []const []const 
 }
 
 pub const Maze = struct {
-    start: Position = undefined,
-    end: Position = undefined,
-    graph: Graph = undefined,
+    start: Position,
+    end: Position,
+    graph: Graph,
 
-    pub fn init(input: []const []const u8) !Maze {
-        var maze = Maze{};
-        maze.graph = Graph.init(std.heap.page_allocator);
+    pub fn init(ally: std.mem.Allocator, input: []const []const u8) !Maze {
+        var maze = Maze{ .start = Position.default, .end = Position.default, .graph = Graph.init(ally) };
         for (0..input.len) |row| {
             for (0..input[0].len) |col| {
                 // std.debug.print("{c}\n", .{input[row][col]});
@@ -78,7 +82,43 @@ pub const Maze = struct {
                 }
             }
         }
+        if (!maze.start.valid() or !maze.end.valid()) {
+            maze.deinit();
+            return error.InvalidMaze;
+        }
         return maze;
+    }
+
+    pub fn deinit(self: *Maze) void {
+        self.graph.deinit();
+    }
+
+    pub fn print(self: Maze) !void {
+        var bw = getBufferedWriter();
+        const stdout = bw.writer();
+
+        try stdout.print("Start: ", .{});
+        try bw.flush();
+        try self.start.print();
+        try stdout.print("\nEnd: ", .{});
+        try bw.flush();
+        try self.end.print();
+
+        try stdout.print("\n", .{});
+        try bw.flush();
+
+        var iterator = self.graph.iterator();
+        while (iterator.next()) |entry| {
+            try entry.key_ptr.print();
+            try stdout.print(" -> ", .{});
+            try bw.flush();
+            for (entry.value_ptr.*.items) |position| {
+                try position.print();
+            }
+            try stdout.print("\n", .{});
+            try bw.flush();
+        }
+        try bw.flush();
     }
 };
 
@@ -86,10 +126,29 @@ pub fn getBufferedWriter() std.io.BufferedWriter(4096, std.fs.File.Writer) {
     return std.io.bufferedWriter(std.io.getStdOut().writer());
 }
 
-export fn add(a: i32, b: i32) i32 {
-    return a + b;
+test "invalid maze" {
+    const ally = std.testing.allocator;
+    const input: []const []const u8 = &[_][]const u8{
+        "###",
+        "#_#",
+        "#_#",
+    };
+    try testing.expectError(error.InvalidMaze, Maze.init(ally, input));
 }
 
-test "basic add functionality" {
-    try testing.expect(add(3, 7) == 10);
+test "adjacency list conversion" {
+    const ally = std.testing.allocator;
+    const input: []const []const u8 = &[_][]const u8{
+        "###",
+        "#S#",
+        "#E#",
+    };
+    var m = try Maze.init(ally, input);
+    defer m.deinit();
+    try testing.expectEqual(m.graph.count(), 2);
+    try testing.expect(m.graph.contains(Position{ .row = 1, .col = 1 }));
+    try testing.expect(m.graph.contains(Position{ .row = 2, .col = 1 }));
+    const path = m.graph.get(Position{ .row = 1, .col = 1 }) orelse unreachable;
+    try testing.expectEqual(path.items.len, 1);
+    try testing.expectEqual(path.getLast(), Position{ .row = 2, .col = 1 });
 }
